@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>AI مفتوح المصدر</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@latest"></script>
+
+    <style>
+        body { font-family: sans-serif; direction: rtl; background: #f0f0f0; padding: 20px; }
+        #chat { width: 100%; max-width: 600px; margin: auto; background: white;
+                padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #aaa; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; }
+        .user { background: #d0ebff; text-align: right; }
+        .bot { background: #e6e6e6; text-align: left; }
+        input { width: 100%; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+
+<body>
+
+<div id="chat"></div>
+<input id="input" placeholder="اكتب رسالتك..." />
+
+<script>
+    // تحميل نموذج مفتوح المصدر — يعمل بالكامل داخل المتصفح
+    const engine = new window.WebLLM.LLMEngine();
+    let loaded = false;
+
+    async function loadModel() {
+        addBot("جاري تحميل نموذج الذكاء الاصطناعي… قد يستغرق 5-15 ثانية");
+        await engine.reload("Llama-3.2-1B-Instruct-q4f32_1-MLC");
+        loaded = true;
+        addBot("تم التحميل! اسألني أي شيء 🤖");
+    }
+
+    loadModel();
+
+    function addUser(text) {
+        chat.innerHTML += `<div class="msg user">${text}</div>`;
+    }
+    function addBot(text) {
+        chat.innerHTML += `<div class="msg bot">${text}</div>`;
+    }
+
+    input.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter" && input.value.trim() !== "" && loaded) {
+            const userMsg = input.value;
+            addUser(userMsg);
+            input.value = "";
+
+            // طلب الذكاء الاصطناعي
+            const reply = await engine.chat.completions.create({
+                messages: [
+                    { role: "user", content: userMsg }
+                ],
+                stream: false
+            });
+
+            addBot(reply.choices[0].message.content);
+        }
+    });
+</script>
+
+</body>
+</html>
